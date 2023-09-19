@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Shortest Job First Scheduling</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            background-color: #3498db;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+            margin-top: 0;
+        }
+
+        #container {
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            margin-top: 20px;
+            width: 80%;
+            overflow-x: auto;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th,
+        td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        p {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Shortest Job First Scheduling</h1>
+    <div id="container">
+        <script>
+            // Define the Process structure
+            class Process {
+                constructor(pid, bt) {
+                    this.pid = pid; // Process ID
+                    this.bt = bt;   // Burst Time
+                }
+            }
+
+            // Function to sort processes by burst time
+            function comparison(a, b) {
+                return a.bt - b.bt;
+            }
+
+            // Function to find waiting time for all processes
+            function findWaitingTime(proc, n, wt) {
+                wt[0] = 0;
+
+                for (let i = 1; i < n; i++) {
+                    wt[i] = proc[i - 1].bt + wt[i - 1];
+                }
+            }
+
+            // Function to find turnaround time for all processes
+            function findTurnAroundTime(proc, n, wt, tat) {
+                for (let i = 0; i < n; i++) {
+                    tat[i] = proc[i].bt + wt[i];
+                }
+            }
+
+            // Function to calculate average time and display the results
+            function findAverageTime(proc, n) {
+                const wt = new Array(n);
+                const tat = new Array(n);
+                let total_wt = 0;
+                let total_tat = 0;
+
+                findWaitingTime(proc, n, wt);
+                findTurnAroundTime(proc, n, wt, tat);
+
+                // Display the results in a table
+                const table = document.createElement('table');
+                const headerRow = table.insertRow(0);
+                const headers = ['Process', 'Burst Time', 'Waiting Time', 'Turnaround Time'];
+
+                headers.forEach((headerText, index) => {
+                    const th = document.createElement('th');
+                    th.appendChild(document.createTextNode(headerText));
+                    headerRow.appendChild(th);
+                });
+
+                for (let i = 0; i < n; i++) {
+                    const row = table.insertRow(i + 1);
+                    const cell1 = row.insertCell(0);
+                    cell1.appendChild(document.createTextNode(proc[i].pid));
+                    const cell2 = row.insertCell(1);
+                    cell2.appendChild(document.createTextNode(proc[i].bt));
+                    const cell3 = row.insertCell(2);
+                    cell3.appendChild(document.createTextNode(wt[i]));
+                    const cell4 = row.insertCell(3);
+                    cell4.appendChild(document.createTextNode(tat[i]));
+                    total_wt += wt[i];
+                    total_tat += tat[i];
+                }
+
+                document.body.appendChild(table);
+
+                const avg_wt = total_wt / n;
+                const avg_tat = total_tat / n;
+
+                // Display average waiting time and average turnaround time
+                const avgTimes = document.createElement('p');
+                avgTimes.innerHTML = `Average waiting time = ${avg_wt.toFixed(2)}<br>Average turnaround time = ${avg_tat.toFixed(2)}`;
+                document.body.appendChild(avgTimes);
+            }
+
+            // Main function
+            function main() {
+                // Prompt the user for the number of processes and their burst times
+                const n = parseInt(prompt("Enter the number of processes:"));
+                const proc = [];
+
+                for (let i = 1; i <= n; i++) {
+                    const burstTime = parseInt(prompt(`Enter burst time for Process ${i}:`));
+                    proc.push(new Process(i, burstTime));
+                }
+
+                // Sort processes by burst time.
+                proc.sort(comparison);
+
+                const orderDiv = document.createElement('div');
+                orderDiv.innerHTML = '<strong>Order in which processes get executed:</strong> ' + proc.map(p => p.pid).join(' ');
+                document.body.appendChild(orderDiv);
+
+                findAverageTime(proc, n);
+            }
+
+            main();
+        </script>
+    </div>
+</body>
+
+</html>

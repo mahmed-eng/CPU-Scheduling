@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HRNN Scheduling Simulation</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    text-align: center;
+    margin-top: 50px;
+}
+
+h1 {
+    color: #333;
+}
+
+button {
+    padding: 10px 20px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+table, th, td {
+    border: 1px solid #333;
+}
+
+th, td {
+    padding: 10px;
+    text-align: center;
+}
+
+thead {
+    background-color: #333;
+    color: white;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+tbody tr:hover {
+    background-color: #ddd;
+}
+
+#avgWaitingTime,
+#avgTurnaroundTime {
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+#formulas {
+    display: none;
+    text-align: left;
+    margin-top: 20px;
+}
+
+#formulas h2 {
+    color: #333;
+    font-size: 18px;
+}
+
+#formulas p {
+    margin: 5px 0;
+}
+
+
+
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>HRNN Scheduling Simulation</h1>
+        <button id="addProcessButton">Add Process</button>
+        <button id="startButton">Start Simulation</button>
+        <button id="showFormulasButton">Show Formulas</button>
+        <table id="scheduleTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Arrival Time</th>
+                    <th>Burst Time</th>
+                    <th>Waiting Time</th>
+                    <th>Turnaround Time</th>
+                    <th>Normalized TT</th>
+                </tr>
+            </thead>
+            <tbody id="scheduleBody"></tbody>
+        </table>
+        <p>Average Waiting Time: <span id="avgWaitingTime"></span></p>
+        <p>Average Turnaround Time: <span id="avgTurnaroundTime"></span></p>
+        <div id="formulas" style="display: none;">
+            <h2>Formulas Used:</h2>
+            <p>Waiting Time = Max(0, Current Time - Arrival Time)</p>
+            <p>Turnaround Time = Waiting Time + Burst Time</p>
+            <p>Normalized TT = Turnaround Time / Burst Time</p>
+        </div>
+    </div>
+    <script>
+document.addEventListener('DOMContentLoaded', function () {
+    const addProcessButton = document.getElementById('addProcessButton');
+    const startButton = document.getElementById('startButton');
+    const showFormulasButton = document.getElementById('showFormulasButton');
+    const scheduleTableBody = document.getElementById('scheduleBody');
+    const avgWaitingTimeSpan = document.getElementById('avgWaitingTime');
+    const avgTurnaroundTimeSpan = document.getElementById('avgTurnaroundTime');
+    const formulasDiv = document.getElementById('formulas');
+    const processes = [];
+
+    addProcessButton.addEventListener('click', addProcess);
+    startButton.addEventListener('click', startSimulation);
+    showFormulasButton.addEventListener('click', toggleFormulas);
+
+    function addProcess() {
+        const name = prompt('Enter Process Name:');
+        const arrivalTime = parseInt(prompt('Enter Arrival Time:'));
+        const burstTime = parseInt(prompt('Enter Burst Time:'));
+        
+        if (!isNaN(arrivalTime) && !isNaN(burstTime)) {
+            processes.push({ name, arrivalTime, burstTime });
+            displayProcesses();
+        } else {
+            alert('Please enter valid numeric values for Arrival Time and Burst Time.');
+        }
+    }
+
+    function displayProcesses() {
+        scheduleTableBody.innerHTML = '';
+        for (const process of processes) {
+            const row = scheduleTableBody.insertRow();
+            row.innerHTML = `<td>${process.name}</td>
+                             <td>${process.arrivalTime}</td>
+                             <td>${process.burstTime}</td>
+                             <td></td>
+                             <td></td>
+                             <td></td>`;
+        }
+    }
+
+    function startSimulation() {
+        const schedule = [];
+        let currentTime = 0;
+        let totalWaitingTime = 0;
+        let totalTurnaroundTime = 0;
+
+        for (const process of processes) {
+            const waitingTime = Math.max(0, currentTime - process.arrivalTime);
+            const turnaroundTime = waitingTime + process.burstTime;
+            totalWaitingTime += waitingTime;
+            totalTurnaroundTime += turnaroundTime;
+            schedule.push({
+                name: process.name,
+                arrivalTime: process.arrivalTime,
+                burstTime: process.burstTime,
+                waitingTime,
+                turnaroundTime,
+                normalizedTT: turnaroundTime / process.burstTime
+            });
+            currentTime += process.burstTime;
+        }
+
+        const avgWaitingTime = totalWaitingTime / processes.length;
+        const avgTurnaroundTime = totalTurnaroundTime / processes.length;
+
+        displaySchedule(schedule);
+        displayAverages(avgWaitingTime, avgTurnaroundTime);
+    }
+
+    function displaySchedule(schedule) {
+        for (let i = 0; i < schedule.length; i++) {
+            const row = scheduleTableBody.rows[i];
+            row.cells[3].textContent = schedule[i].waitingTime;
+            row.cells[4].textContent = schedule[i].turnaroundTime;
+            row.cells[5].textContent = schedule[i].normalizedTT.toFixed(2);
+        }
+    }
+
+    function displayAverages(avgWaitingTime, avgTurnaroundTime) {
+        avgWaitingTimeSpan.textContent = avgWaitingTime.toFixed(2);
+        avgTurnaroundTimeSpan.textContent = avgTurnaroundTime.toFixed(2);
+    }
+
+    function toggleFormulas() {
+        formulasDiv.style.display = formulasDiv.style.display === 'none' ? 'block' : 'none';
+    }
+});
+
+
+
+    </script>
+</body>
+</html>
